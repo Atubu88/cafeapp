@@ -116,29 +116,16 @@ function App() {
 
   /* ---------- MENU PAGE ---------- */
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* STICKY HEADER */}
-      <div className="sticky top-0 z-50 bg-slate-50 border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-4xl font-extrabold text-slate-900">
-            Система заказов
-          </h1>
-
-          {/* CART BUTTON */}
-          <div
-            onClick={() => setPage('cart')}
-            className="cursor-pointer flex items-center gap-2 bg-white rounded-xl shadow px-4 py-2"
-          >
-            <ShoppingCart className="w-5 h-5 text-slate-700" />
-            <span className="font-semibold text-slate-800">
-              {cart.length}
-            </span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-50 relative">
+      {/* HEADER (обычный, уезжает) */}
+      <div className="max-w-7xl mx-auto px-4 py-6 mb-6">
+        <h1 className="text-4xl font-extrabold text-slate-900">
+          Система заказов
+        </h1>
       </div>
 
-      {/* CONTENT */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* MENU */}
+      <div className="max-w-7xl mx-auto px-4 pb-24">
         <Menu
           categories={categories}
           products={products}
@@ -147,6 +134,22 @@ function App() {
           onUpdateQuantity={handleUpdateQuantity}
         />
       </div>
+
+      {/* FLOATING CART BUTTON */}
+      {cart.length > 0 && (
+        <div
+          onClick={() => setPage('cart')}
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 cursor-pointer"
+        >
+          <div className="relative bg-purple-600 text-white rounded-full shadow-xl p-4 hover:scale-105 transition">
+            <ShoppingCart className="w-6 h-6" />
+
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+              {cart.length}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
