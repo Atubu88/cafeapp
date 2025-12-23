@@ -9,40 +9,88 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export interface HealthCheck {
+export interface Category {
   id: string;
-  status: string;
-  created_at: string;
+  name: string;
 }
 
-export async function testDatabaseConnection(): Promise<{
-  success: boolean;
-  message: string;
-  data?: HealthCheck[];
+export interface Product {
+  id: string;
+  category_id: string;
+  name: string;
+  price: number;
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+export async function fetchMenu(): Promise<{
+  categories: Category[];
+  products: Product[];
 }> {
   try {
-    const { data, error } = await supabase
-      .from('health_check')
-      .select('*')
-      .limit(1)
-      .maybeSingle();
+    const [categoriesResult, productsResult] = await Promise.all([
+      supabase.from('categories').select('*'),
+      supabase.from('products').select('*'),
+    ]);
 
-    if (error) {
-      return {
-        success: false,
-        message: `Database error: ${error.message}`,
-      };
+    if (categoriesResult.error || productsResult.error) {
+      throw new Error('Failed to fetch menu');
+    }
+
+    return {
+      categories: categoriesResult.data || [],
+      products: productsResult.data || [],
+    };
+  } catch (err) {
+    console.error('Error fetching menu:', err);
+    return { categories: [], products: [] };
+  }
+}
+
+export async function saveOrder(items: CartItem[]): Promise<{
+  success: boolean;
+  orderId?: string;
+  error?: string;
+}> {
+  try {
+    const totalPrice = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert([{ total_price: totalPrice }])
+      .select()
+      .single();
+
+    if (orderError || !orderData) {
+      throw new Error('Failed to create order');
+    }
+
+    const orderItems = items.map((item) => ({
+      order_id: orderData.id,
+      product_id: item.product.id,
+      quantity: item.quantity,
+      price: item.product.price,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+
+    if (itemsError) {
+      throw new Error('Failed to save order items');
     }
 
     return {
       success: true,
-      message: data?.status || 'Database connected successfully',
-      data: data ? [data] : [],
+      orderId: orderData.id,
     };
   } catch (err) {
     return {
       success: false,
-      message: `Connection failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      error: err instanceof Error ? err.message : 'Unknown error',
     };
   }
 }
