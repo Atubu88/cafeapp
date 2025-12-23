@@ -14,44 +14,51 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function Menu({ categories, products, onAddToCart }: MenuProps) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-14">
       {categories.map((category) => {
         const categoryProducts = products.filter(
           (p) => p.category_id === category.id
         );
 
         return (
-          <div key={category.id}>
-            <h2 className="text-3xl font-bold text-slate-900 mb-6">
-              {CATEGORY_LABELS[category.name] ?? category.name}
-            </h2>
+          <section key={category.id}>
+            {/* Заголовок категории */}
+            <div className="mb-6">
+              <h2 className="text-4xl font-extrabold text-slate-900">
+                {CATEGORY_LABELS[category.name] ?? category.name}
+              </h2>
+              <div className="h-1 w-12 bg-purple-600 rounded-full mt-2" />
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Товары */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {categoryProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-card rounded-xl shadow-card p-6 flex justify-between items-center"
+                  className="relative bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition group"
                 >
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      {product.name}
-                    </h3>
-                    <p className="text-xl font-bold text-muted">
-                      ${(product.price / 100).toFixed(2)}
-                    </p>
-                  </div>
+                  {/* Название */}
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">
+                    {product.name}
+                  </h3>
 
+                  {/* Цена */}
+                  <p className="text-3xl font-extrabold text-purple-600 mb-6">
+                    ${(product.price / 100).toFixed(2)}
+                  </p>
+
+                  {/* Кнопка */}
                   <button
                     onClick={() => onAddToCart(product)}
-                    className="bg-primary text-white p-3 rounded-xl hover:bg-primaryDark transition"
-                    aria-label="Добавить в корзину"
+                    className="w-full flex items-center justify-center gap-2 bg-purple-600 text-white py-3 rounded-xl text-lg font-semibold hover:bg-purple-700 transition"
                   >
                     <Plus className="w-5 h-5" />
+                    Добавить
                   </button>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         );
       })}
     </div>
