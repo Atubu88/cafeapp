@@ -84,8 +84,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted">Загрузка меню...</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500">Загрузка меню…</p>
       </div>
     );
   }
@@ -100,16 +100,16 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Шапка */}
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-4xl font-extrabold text-slate-900">
             Система заказов
           </h1>
 
-          <div className="flex items-center gap-2 bg-card rounded-xl shadow-card px-4 py-2">
-            <ShoppingCart className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-2 bg-white rounded-xl shadow px-4 py-2">
+            <ShoppingCart className="w-5 h-5 text-slate-700" />
             <span className="font-semibold text-slate-800">
               {cart.length}
             </span>
