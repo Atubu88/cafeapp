@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { fetchMenu, saveOrder, Category, Product, CartItem } from './lib/db';
 import { Menu } from './components/Menu';
-import { Cart } from './components/Cart';
 import { OrderConfirmation } from './components/OrderConfirmation';
+import { CartPage } from './pages/CartPage';
 import { ShoppingCart } from 'lucide-react';
 
-type PageType = 'menu' | 'confirmation';
+type PageType = 'menu' | 'cart' | 'confirmation';
 
 function App() {
   const [page, setPage] = useState<PageType>('menu');
@@ -28,37 +28,33 @@ function App() {
   }, []);
 
   const handleAddToCart = (product: Product) => {
-    setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.product.id === product.id);
+    setCart((prev) => {
+      const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
-        return prevCart.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+        return prev.map((i) =>
+          i.product.id === product.id
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
         );
       }
-      return [...prevCart, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1 }];
     });
   };
 
   const handleUpdateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      setCart((prevCart) =>
-        prevCart.filter((item) => item.product.id !== productId)
-      );
+      setCart((prev) => prev.filter((i) => i.product.id !== productId));
     } else {
-      setCart((prevCart) =>
-        prevCart.map((item) =>
-          item.product.id === productId ? { ...item, quantity } : item
+      setCart((prev) =>
+        prev.map((i) =>
+          i.product.id === productId ? { ...i, quantity } : i
         )
       );
     }
   };
 
   const handleRemoveItem = (productId: string) => {
-    setCart((prevCart) =>
-      prevCart.filter((item) => item.product.id !== productId)
-    );
+    setCart((prev) => prev.filter((i) => i.product.id !== productId));
   };
 
   const handlePlaceOrder = async () => {
@@ -82,6 +78,7 @@ function App() {
     setCart([]);
   };
 
+  /* ---------- LOADING ---------- */
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -90,6 +87,21 @@ function App() {
     );
   }
 
+  /* ---------- CART PAGE ---------- */
+  if (page === 'cart') {
+    return (
+      <CartPage
+        items={cart}
+        onBack={() => setPage('menu')}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onPlaceOrder={handlePlaceOrder}
+        isLoading={orderLoading}
+      />
+    );
+  }
+
+  /* ---------- CONFIRMATION ---------- */
   if (page === 'confirmation') {
     return (
       <OrderConfirmation
@@ -99,6 +111,7 @@ function App() {
     );
   }
 
+  /* ---------- MENU PAGE ---------- */
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -108,7 +121,11 @@ function App() {
             Система заказов
           </h1>
 
-          <div className="flex items-center gap-2 bg-white rounded-xl shadow px-4 py-2">
+          {/* КНОПКА КОРЗИНЫ */}
+          <div
+            onClick={() => setPage('cart')}
+            className="cursor-pointer flex items-center gap-2 bg-white rounded-xl shadow px-4 py-2"
+          >
             <ShoppingCart className="w-5 h-5 text-slate-700" />
             <span className="font-semibold text-slate-800">
               {cart.length}
@@ -116,28 +133,12 @@ function App() {
           </div>
         </div>
 
-        {/* Контент */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2">
-            <Menu
-              categories={categories}
-              products={products}
-              onAddToCart={handleAddToCart}
-            />
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="sticky top-6">
-              <Cart
-                items={cart}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                onPlaceOrder={handlePlaceOrder}
-                isLoading={orderLoading}
-              />
-            </div>
-          </div>
-        </div>
+        {/* Меню */}
+        <Menu
+          categories={categories}
+          products={products}
+          onAddToCart={handleAddToCart}
+        />
       </div>
     </div>
   );
