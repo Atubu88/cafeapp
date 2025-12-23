@@ -84,8 +84,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <p className="text-slate-600">Загрузка меню...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted">Загрузка меню...</p>
       </div>
     );
   }
@@ -100,22 +100,24 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-slate-800">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Шапка */}
+        <div className="flex items-center justify-between mb-10">
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
             Система заказов
           </h1>
 
-          <div className="flex items-center gap-2 bg-white rounded-lg shadow px-4 py-2">
-            <ShoppingCart className="w-5 h-5 text-blue-500" />
-            <span className="font-semibold text-slate-700">
+          <div className="flex items-center gap-2 bg-card rounded-xl shadow-card px-4 py-2">
+            <ShoppingCart className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-slate-800">
               {cart.length}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Контент */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2">
             <Menu
               categories={categories}
