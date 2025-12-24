@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { fetchMenu, saveOrder, Category, Product, CartItem } from './lib/db';
+import {
+  checkAdminAccess,
+  fetchMenu,
+  saveOrder,
+  Category,
+  Product,
+  CartItem,
+} from './lib/db';
 import { Menu } from './components/Menu';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { CartPage } from './pages/CartPage';
@@ -15,6 +22,28 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
+  const [adminGuardReady, setAdminGuardReady] = useState(false);
+
+  /* ---------- ADMIN GUARD ---------- */
+  useEffect(() => {
+    const ensureAdminAccess = async () => {
+      if (window.location.pathname !== '/admin') {
+        setAdminGuardReady(true);
+        return;
+      }
+
+      const { isAdmin } = await checkAdminAccess();
+
+      if (!isAdmin) {
+        window.location.replace('/');
+        return;
+      }
+
+      setAdminGuardReady(true);
+    };
+
+    ensureAdminAccess();
+  }, []);
 
   /* ---------- LOAD MENU ---------- */
   useEffect(() => {
@@ -82,7 +111,7 @@ function App() {
   };
 
   /* ---------- LOADING ---------- */
-  if (loading) {
+  if (!adminGuardReady || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <p className="text-slate-500">Загрузка меню…</p>

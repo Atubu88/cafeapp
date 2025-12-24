@@ -26,6 +26,41 @@ export interface CartItem {
   quantity: number;
 }
 
+export async function checkAdminAccess(): Promise<{
+  hasSession: boolean;
+  isAdmin: boolean;
+  error?: string;
+}> {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error || !data.session) {
+    return {
+      hasSession: false,
+      isAdmin: false,
+      error: error?.message,
+    };
+  }
+
+  const { data: adminUser, error: adminError } = await supabase
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', data.session.user.id)
+    .maybeSingle();
+
+  if (adminError) {
+    return {
+      hasSession: true,
+      isAdmin: false,
+      error: adminError.message,
+    };
+  }
+
+  return {
+    hasSession: true,
+    isAdmin: Boolean(adminUser),
+  };
+}
+
 export async function fetchMenu(): Promise<{
   categories: Category[];
   products: Product[];
