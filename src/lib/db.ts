@@ -26,6 +26,40 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  product?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface Order {
+  id: string;
+  total_price: number;
+  created_at: string;
+  items: OrderItem[];
+}
+
+export interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  product?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface Order {
+  id: string;
+  total_price: number;
+  created_at: string;
+  items: OrderItem[];
+}
+
 export async function checkAdminAccess(): Promise<{
   hasSession: boolean;
   isAdmin: boolean;
@@ -125,6 +159,38 @@ export async function saveOrder(items: CartItem[]): Promise<{
   } catch (err) {
     return {
       success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
+
+export async function fetchOrders(): Promise<{
+  orders: Order[];
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(
+        'id,total_price,created_at,order_items(id,quantity,price,product:products(id,name))'
+      )
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const orders = (data || []).map((order) => ({
+      id: order.id,
+      total_price: order.total_price,
+      created_at: order.created_at,
+      items: order.order_items || [],
+    }));
+
+    return { orders };
+  } catch (err) {
+    return {
+      orders: [],
       error: err instanceof Error ? err.message : 'Unknown error',
     };
   }

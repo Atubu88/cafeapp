@@ -11,6 +11,7 @@ import { Menu } from './components/Menu';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { CartPage } from './pages/CartPage';
 import { AdminMenuPage } from './pages/AdminMenuPage';
+import { AdminOrdersPage } from './pages/AdminOrdersPage';
 import { ShoppingCart } from 'lucide-react';
 
 type PageType = 'menu' | 'cart' | 'confirmation';
@@ -154,6 +155,10 @@ function App() {
         onNavigate={navigate}
       />
     );
+  }
+
+  if (path === '/admin/orders') {
+    return <AdminOrdersPage onNavigate={navigate} />;
   }
 
   /* ---------- CART PAGE ---------- */
