@@ -10,6 +10,7 @@ import {
 import { Menu } from './components/Menu';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { CartPage } from './pages/CartPage';
+import { AdminMenuPage } from './pages/AdminMenuPage';
 import { ShoppingCart } from 'lucide-react';
 
 type PageType = 'menu' | 'cart' | 'confirmation';
@@ -23,15 +24,33 @@ function App() {
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
   const [adminGuardReady, setAdminGuardReady] = useState(false);
+  const [path, setPath] = useState(() => window.location.pathname);
+
+  const navigate = (nextPath: string) => {
+    if (nextPath === path) return;
+    window.history.pushState({}, '', nextPath);
+    setPath(nextPath);
+  };
 
   /* ---------- ADMIN GUARD ---------- */
   useEffect(() => {
+    const handlePopState = () => setPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
     const ensureAdminAccess = async () => {
-      if (window.location.pathname !== '/admin') {
-        setAdminGuardReady(true);
+      if (!path.startsWith('/admin')) {
+        if (isMounted) {
+          setAdminGuardReady(true);
+        }
         return;
       }
 
+      setAdminGuardReady(false);
       const { isAdmin } = await checkAdminAccess();
 
       if (!isAdmin) {
@@ -39,11 +58,16 @@ function App() {
         return;
       }
 
-      setAdminGuardReady(true);
+      if (isMounted) {
+        setAdminGuardReady(true);
+      }
     };
 
     ensureAdminAccess();
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [path]);
 
   /* ---------- LOAD MENU ---------- */
   useEffect(() => {
@@ -119,6 +143,19 @@ function App() {
     );
   }
 
+  /* ---------- ADMIN MENU ---------- */
+  if (path === '/admin/menu') {
+    return (
+      <AdminMenuPage
+        categories={categories}
+        products={products}
+        onCategoriesChange={setCategories}
+        onProductsChange={setProducts}
+        onNavigate={navigate}
+      />
+    );
+  }
+
   /* ---------- CART PAGE ---------- */
   if (page === 'cart') {
     return (
@@ -147,10 +184,17 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50 relative">
       {/* HEADER (обычный, уезжает) */}
-      <div className="max-w-7xl mx-auto px-4 py-6 mb-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 mb-6 flex items-center justify-between">
         <h1 className="text-4xl font-extrabold text-slate-900">
           Система заказов
         </h1>
+        <button
+          type="button"
+          onClick={() => navigate('/admin/menu')}
+          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white"
+        >
+          Админ-меню
+        </button>
       </div>
 
       {/* MENU */}

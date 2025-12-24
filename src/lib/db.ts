@@ -129,3 +129,152 @@ export async function saveOrder(items: CartItem[]): Promise<{
     };
   }
 }
+
+export async function createCategory(name: string): Promise<{
+  success: boolean;
+  category?: Category;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .insert([{ name }])
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error('Failed to create category');
+    }
+
+    return { success: true, category: data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
+
+export async function updateCategory(
+  id: string,
+  name: string
+): Promise<{
+  success: boolean;
+  category?: Category;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .update({ name })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error('Failed to update category');
+    }
+
+    return { success: true, category: data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
+
+export async function deleteCategory(id: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+
+    if (error) {
+      throw new Error('Failed to delete category');
+    }
+
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
+
+export async function createProduct(input: Omit<Product, 'id'>): Promise<{
+  success: boolean;
+  product?: Product;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .insert([input])
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error('Failed to create product');
+    }
+
+    return { success: true, product: data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
+
+export async function updateProduct(input: Product): Promise<{
+  success: boolean;
+  product?: Product;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .update({
+        name: input.name,
+        price: input.price,
+        category_id: input.category_id,
+      })
+      .eq('id', input.id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error('Failed to update product');
+    }
+
+    return { success: true, product: data };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
+
+export async function deleteProduct(id: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+
+    if (error) {
+      throw new Error('Failed to delete product');
+    }
+
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
