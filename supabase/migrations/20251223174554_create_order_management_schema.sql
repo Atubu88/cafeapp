@@ -1,82 +1,120 @@
-/*
-  # Create order management schema
+import { useMemo, useState } from 'react';
+import { Category, Product, CartItem } from '../lib/db';
+import { Plus, Minus } from 'lucide-react';
 
-  1. New Tables
-    - `categories`
-      - `id` (uuid, primary key) - Unique identifier
-      - `name` (text) - Category name
+interface MenuProps {
+  categories: Category[];
+  products: Product[];
+  cart: CartItem[];
+  onAddToCart: (product: Product) => void;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
+}
 
-    - `products`
-      - `id` (uuid, primary key) - Unique identifier
-      - `category_id` (uuid, foreign key) - Reference to category
-      - `name` (text) - Product name
-      - `price` (integer) - Price in cents
+export function Menu({
+  categories,
+  products,
+  cart,
+  onAddToCart,
+  onUpdateQuantity,
+}: MenuProps) {
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
+    categories[0]?.id ?? null
+  );
 
-    - `orders`
-      - `id` (uuid, primary key) - Unique identifier
-      - `total_price` (integer) - Total order price in cents
-      - `created_at` (timestamptz) - Order creation timestamp
+  /* productId → quantity */
+  const cartMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    cart.forEach((item) => {
+      map[item.product.id] = item.quantity;
+    });
+    return map;
+  }, [cart]);
 
-    - `order_items`
-      - `id` (uuid, primary key) - Unique identifier
-      - `order_id` (uuid, foreign key) - Reference to order
-      - `product_id` (uuid, foreign key) - Reference to product
-      - `quantity` (integer) - Quantity ordered
-      - `price` (integer) - Price per unit at time of order
+  const activeProducts = products.filter(
+    (p) => p.category_id === activeCategoryId
+  );
 
-  2. Security
-    - Enable RLS on all tables
-    - Allow anonymous SELECT on categories and products
-    - Allow anonymous INSERT on orders and order_items
-*/
+  return (
+    <div className="space-y-8">
+      {/* ===== CATEGORY TABS ===== */}
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {categories.map((category) => {
+          const isActive = category.id === activeCategoryId;
 
-CREATE TABLE IF NOT EXISTS categories (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL
-);
+          return (
+            <button
+              key={category.id}
+              onClick={() => setActiveCategoryId(category.id)}
+              className={`whitespace-nowrap px-5 py-2 rounded-full font-semibold transition
+                ${
+                  isActive
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+            >
+              {/* 🔑 ТОЛЬКО ДАННЫЕ ИЗ БД */}
+              {category.display_name}
+            </button>
+          );
+        })}
+      </div>
 
-CREATE TABLE IF NOT EXISTS products (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  category_id uuid NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-  name text NOT NULL,
-  price integer NOT NULL
-);
+      {/* ===== PRODUCTS ===== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        {activeProducts.map((product) => {
+          const quantity = cartMap[product.id] ?? 0;
 
-CREATE TABLE IF NOT EXISTS orders (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  total_price integer NOT NULL,
-  created_at timestamptz DEFAULT now()
-);
+          return (
+            <div
+              key={product.id}
+              className="bg-white rounded-2xl shadow p-6 flex flex-col justify-between"
+            >
+              <div>
+                <h3 className="text-lg font-bold mb-1">
+                  {product.name}
+                </h3>
+                <p className="text-2xl font-extrabold text-purple-600 mb-6">
+                  ${(product.price / 100).toFixed(2)}
+                </p>
+              </div>
 
-CREATE TABLE IF NOT EXISTS order_items (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id uuid NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  product_id uuid NOT NULL REFERENCES products(id),
-  quantity integer NOT NULL,
-  price integer NOT NULL
-);
+              {/* BUTTON / COUNTER */}
+              {quantity === 0 ? (
+                <button
+                  onClick={() => onAddToCart(product)}
+                  className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition"
+                >
+                  Добавить
+                </button>
+              ) : (
+                <div className="flex items-center justify-between bg-slate-100 rounded-xl px-4 py-2">
+                  <button
+                    onClick={() =>
+                      onUpdateQuantity(product.id, quantity - 1)
+                    }
+                    className="p-2 rounded-lg bg-white shadow"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
 
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+                  <span className="font-bold text-lg">
+                    {quantity}
+                  </span>
 
-CREATE POLICY "Allow anonymous read categories"
-  ON categories FOR SELECT
-  TO anon
-  USING (true);
-
-CREATE POLICY "Allow anonymous read products"
-  ON products FOR SELECT
-  TO anon
-  USING (true);
-
-CREATE POLICY "Allow anonymous insert orders"
-  ON orders FOR INSERT
-  TO anon
-  WITH CHECK (true);
-
-CREATE POLICY "Allow anonymous insert order items"
-  ON order_items FOR INSERT
-  TO anon
-  WITH CHECK (true);
+                  <button
+                    onClick={() =>
+                      onUpdateQuantity(product.id, quantity + 1)
+                    }
+                    className="p-2 rounded-lg bg-white shadow"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
