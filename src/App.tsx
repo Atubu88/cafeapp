@@ -118,7 +118,7 @@ function App() {
     if (cart.length === 0) return;
 
     setOrderLoading(true);
-    const result = await saveOrder(cart);
+    const result = await saveOrder(cart, { status: 'new', source: 'web' });
     setOrderLoading(false);
 
     if (result.success && result.orderId) {

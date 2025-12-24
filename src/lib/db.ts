@@ -40,6 +40,9 @@ export interface Order {
   id: string;
   total_price: number;
   created_at: string;
+  status: string;
+  source: string;
+  tg_user_id?: string | null;
   items: OrderItem[];
 }
 
@@ -57,6 +60,9 @@ export interface Order {
   id: string;
   total_price: number;
   created_at: string;
+  status: string;
+  source: string;
+  tg_user_id?: string | null;
   items: OrderItem[];
 }
 
@@ -119,7 +125,10 @@ export async function fetchMenu(): Promise<{
   }
 }
 
-export async function saveOrder(items: CartItem[]): Promise<{
+export async function saveOrder(
+  items: CartItem[],
+  options?: { status?: string; source?: string; tgUserId?: string | null }
+): Promise<{
   success: boolean;
   orderId?: string;
   error?: string;
@@ -129,7 +138,12 @@ export async function saveOrder(items: CartItem[]): Promise<{
 
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
-      .insert([{ total_price: totalPrice }])
+      .insert([{
+        total_price: totalPrice,
+        status: options?.status ?? 'new',
+        source: options?.source ?? 'web',
+        tg_user_id: options?.tgUserId ?? null,
+      }])
       .select()
       .single();
 
@@ -172,7 +186,7 @@ export async function fetchOrders(): Promise<{
     const { data, error } = await supabase
       .from('orders')
       .select(
-        'id,total_price,created_at,order_items(id,quantity,price,product:products(id,name))'
+        'id,total_price,created_at,status,source,tg_user_id,order_items(id,quantity,price,product:products(id,name))'
       )
       .order('created_at', { ascending: false });
 
@@ -184,6 +198,9 @@ export async function fetchOrders(): Promise<{
       id: order.id,
       total_price: order.total_price,
       created_at: order.created_at,
+      status: order.status,
+      source: order.source,
+      tg_user_id: order.tg_user_id,
       items: order.order_items || [],
     }));
 
