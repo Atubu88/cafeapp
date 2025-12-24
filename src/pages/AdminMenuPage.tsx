@@ -233,13 +233,22 @@ export function AdminMenuPage({
             </p>
             <h1 className="text-3xl font-bold text-slate-900">Управление меню</h1>
           </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('/')}
-            className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white"
-          >
-            Перейти в витрину
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => onNavigate('/admin/orders')}
+              className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white"
+            >
+              Заказы
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('/')}
+              className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-white"
+            >
+              Перейти в витрину
+            </button>
+          </div>
         </div>
 
         {error && (
