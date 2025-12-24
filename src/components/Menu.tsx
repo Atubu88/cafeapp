@@ -35,28 +35,29 @@ export function Menu({
   );
 
   return (
-    <div className="space-y-8">
-      {/* ===== CATEGORY TABS ===== */}
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {categories.map((category) => {
-          const isActive = category.id === activeCategoryId;
+    <div className="space-y-10">
+      {/* ===== CATEGORY TABS (VISIBLE + STICKY) ===== */}
+      <div className="sticky top-0 z-30 bg-slate-50 -mx-4 px-4 pt-4 pb-3">
+        <div className="flex gap-3 overflow-x-auto">
+          {categories.map((category) => {
+            const isActive = category.id === activeCategoryId;
 
-          return (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategoryId(category.id)}
-              className={`whitespace-nowrap px-5 py-2 rounded-full font-semibold transition
-                ${
-                  isActive
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-            >
-              {/* 🔑 ТОЛЬКО ДАННЫЕ ИЗ БД */}
-              {category.display_name}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategoryId(category.id)}
+                className={`whitespace-nowrap px-6 py-3 rounded-full font-semibold transition
+                  ${
+                    isActive
+                      ? 'bg-purple-600 text-white shadow'
+                      : 'bg-white text-slate-700 border hover:bg-slate-100'
+                  }`}
+              >
+                {category.display_name}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ===== PRODUCTS ===== */}
