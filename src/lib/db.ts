@@ -127,48 +127,34 @@ export async function fetchMenu(): Promise<{
 
 export async function saveOrder(
   items: CartItem[],
-  options?: { status?: string; source?: string; tgUserId?: string | null }
+  options?: { status?: string; source?: string; tgUserId?: string | null; initData?: string }
 ): Promise<{
   success: boolean;
   orderId?: string;
   error?: string;
 }> {
   try {
-    const totalPrice = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert([{
-        total_price: totalPrice,
+    const { data, error } = await supabase.functions.invoke('orders', {
+      body: {
+        items: items.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
         status: options?.status ?? 'new',
         source: options?.source ?? 'web',
-        tg_user_id: options?.tgUserId ?? null,
-      }])
-      .select()
-      .single();
+        tgUserId: options?.tgUserId ?? null,
+        initData: options?.initData,
+      },
+    });
 
-    if (orderError || !orderData) {
-      throw new Error('Failed to create order');
-    }
-
-    const orderItems = items.map((item) => ({
-      order_id: orderData.id,
-      product_id: item.product.id,
-      quantity: item.quantity,
-      price: item.product.price,
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) {
-      throw new Error('Failed to save order items');
+    if (error || !data?.orderId) {
+      throw new Error(error?.message ?? 'Failed to create order');
     }
 
     return {
       success: true,
-      orderId: orderData.id,
+      orderId: data.orderId,
     };
   } catch (err) {
     return {
