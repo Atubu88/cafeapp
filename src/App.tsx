@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { fetchMenu, saveOrder, Category, Product, CartItem } from './lib/db';
 import { Menu } from './components/Menu';
-import { Cart } from './components/Cart';
 import { OrderConfirmation } from './components/OrderConfirmation';
+import { CartPage } from './pages/CartPage';
 import { ShoppingCart } from 'lucide-react';
 
-type PageType = 'menu' | 'confirmation';
+type PageType = 'menu' | 'cart' | 'confirmation';
 
 function App() {
   const [page, setPage] = useState<PageType>('menu');
@@ -16,6 +16,7 @@ function App() {
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
 
+  /* ---------- LOAD MENU ---------- */
   useEffect(() => {
     const loadMenu = async () => {
       const { categories, products } = await fetchMenu();
@@ -27,36 +28,38 @@ function App() {
     loadMenu();
   }, []);
 
+  /* ---------- CART ACTIONS ---------- */
   const handleAddToCart = (product: Product) => {
-    setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.product.id === product.id);
+    setCart((prev) => {
+      const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
-        return prevCart.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+        return prev.map((i) =>
+          i.product.id === product.id
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
         );
       }
-      return [...prevCart, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1 }];
     });
   };
 
   const handleUpdateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+      setCart((prev) => prev.filter((i) => i.product.id !== productId));
     } else {
-      setCart((prevCart) =>
-        prevCart.map((item) =>
-          item.product.id === productId ? { ...item, quantity } : item
+      setCart((prev) =>
+        prev.map((i) =>
+          i.product.id === productId ? { ...i, quantity } : i
         )
       );
     }
   };
 
   const handleRemoveItem = (productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+    setCart((prev) => prev.filter((i) => i.product.id !== productId));
   };
 
+  /* ---------- ORDER ---------- */
   const handlePlaceOrder = async () => {
     if (cart.length === 0) return;
 
@@ -69,7 +72,7 @@ function App() {
       setCart([]);
       setPage('confirmation');
     } else {
-      alert(`Error placing order: ${result.error}`);
+      alert(`Ошибка при оформлении заказа: ${result.error}`);
     }
   };
 
@@ -78,47 +81,75 @@ function App() {
     setCart([]);
   };
 
+  /* ---------- LOADING ---------- */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <p className="text-slate-600">Loading menu...</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500">Загрузка меню…</p>
       </div>
     );
   }
 
-  if (page === 'confirmation') {
-    return <OrderConfirmation orderId={orderId} onNewOrder={handleNewOrder} />;
+  /* ---------- CART PAGE ---------- */
+  if (page === 'cart') {
+    return (
+      <CartPage
+        items={cart}
+        onBack={() => setPage('menu')}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onPlaceOrder={handlePlaceOrder}
+        isLoading={orderLoading}
+      />
+    );
   }
 
+  /* ---------- CONFIRMATION ---------- */
+  if (page === 'confirmation') {
+    return (
+      <OrderConfirmation
+        orderId={orderId}
+        onNewOrder={handleNewOrder}
+      />
+    );
+  }
+
+  /* ---------- MENU PAGE ---------- */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-slate-800">Order System</h1>
-          <div className="flex items-center gap-2 bg-white rounded-lg shadow px-4 py-2">
-            <ShoppingCart className="w-5 h-5 text-blue-500" />
-            <span className="font-semibold text-slate-700">{cart.length}</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Menu categories={categories} products={products} onAddToCart={handleAddToCart} />
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="sticky top-6">
-              <Cart
-                items={cart}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                onPlaceOrder={handlePlaceOrder}
-                isLoading={orderLoading}
-              />
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-50 relative">
+      {/* HEADER (обычный, уезжает) */}
+      <div className="max-w-7xl mx-auto px-4 py-6 mb-6">
+        <h1 className="text-4xl font-extrabold text-slate-900">
+          Система заказов
+        </h1>
       </div>
+
+      {/* MENU */}
+      <div className="max-w-7xl mx-auto px-4 pb-24">
+        <Menu
+          categories={categories}
+          products={products}
+          cart={cart}
+          onAddToCart={handleAddToCart}
+          onUpdateQuantity={handleUpdateQuantity}
+        />
+      </div>
+
+      {/* FLOATING CART BUTTON */}
+      {cart.length > 0 && (
+        <div
+          onClick={() => setPage('cart')}
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 cursor-pointer"
+        >
+          <div className="relative bg-purple-600 text-white rounded-full shadow-xl p-4 hover:scale-105 transition">
+            <ShoppingCart className="w-6 h-6" />
+
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+              {cart.length}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
