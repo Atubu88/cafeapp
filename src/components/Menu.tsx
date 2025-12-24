@@ -10,11 +10,6 @@ interface MenuProps {
   onUpdateQuantity: (productId: string, quantity: number) => void;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  Beverages: 'Напитки',
-  Snacks: 'Закуски',
-};
-
 export function Menu({
   categories,
   products,
@@ -22,11 +17,11 @@ export function Menu({
   onAddToCart,
   onUpdateQuantity,
 }: MenuProps) {
-  const [activeCategoryId, setActiveCategoryId] = useState<string>(
-    categories[0]?.id
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
+    categories[0]?.id ?? null
   );
 
-  // productId → quantity
+  /* productId → quantity */
   const cartMap = useMemo(() => {
     const map: Record<string, number> = {};
     cart.forEach((item) => {
@@ -42,7 +37,7 @@ export function Menu({
   return (
     <div className="space-y-8">
       {/* ===== CATEGORY TABS ===== */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+      <div className="flex gap-3 overflow-x-auto pb-2">
         {categories.map((category) => {
           const isActive = category.id === activeCategoryId;
 
@@ -57,7 +52,8 @@ export function Menu({
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
             >
-              {CATEGORY_LABELS[category.name] ?? category.name}
+              {/* 🔑 ТОЛЬКО ДАННЫЕ ИЗ БД */}
+              {category.display_name}
             </button>
           );
         })}
