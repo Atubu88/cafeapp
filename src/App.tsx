@@ -12,6 +12,7 @@ import { OrderConfirmation } from './components/OrderConfirmation';
 import { CartPage } from './pages/CartPage';
 import { AdminMenuPage } from './pages/AdminMenuPage';
 import { AdminOrdersPage } from './pages/AdminOrdersPage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
 import { ShoppingCart } from 'lucide-react';
 
 type PageType = 'menu' | 'cart' | 'confirmation';
@@ -24,7 +25,13 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
-  const [adminGuardReady, setAdminGuardReady] = useState(false);
+  const [adminStatus, setAdminStatus] = useState({
+    checked: false,
+    isAdmin: false,
+    hasSession: false,
+    error: null as string | null,
+  });
+  const [adminRefreshKey, setAdminRefreshKey] = useState(0);
   const [path, setPath] = useState(() => window.location.pathname);
 
   const navigate = (nextPath: string) => {
@@ -42,33 +49,34 @@ function App() {
 
   useEffect(() => {
     let isMounted = true;
+    const isAdminRoute = path.startsWith('/admin');
 
     const ensureAdminAccess = async () => {
-      if (!path.startsWith('/admin')) {
+      if (!isAdminRoute) {
         if (isMounted) {
-          setAdminGuardReady(true);
+          setAdminStatus((prev) => ({ ...prev, checked: true }));
         }
         return;
       }
 
-      setAdminGuardReady(false);
-      const { isAdmin } = await checkAdminAccess();
+      setAdminStatus((prev) => ({ ...prev, checked: false, error: null }));
+      const result = await checkAdminAccess();
 
-      if (!isAdmin) {
-        window.location.replace('/');
-        return;
-      }
+      if (!isMounted) return;
 
-      if (isMounted) {
-        setAdminGuardReady(true);
-      }
+      setAdminStatus({
+        checked: true,
+        isAdmin: result.isAdmin,
+        hasSession: result.hasSession,
+        error: result.error ?? null,
+      });
     };
 
     ensureAdminAccess();
     return () => {
       isMounted = false;
     };
-  }, [path]);
+  }, [path, adminRefreshKey]);
 
   /* ---------- LOAD MENU ---------- */
   useEffect(() => {
@@ -136,11 +144,24 @@ function App() {
   };
 
   /* ---------- LOADING ---------- */
-  if (!adminGuardReady || loading) {
+  const isAdminRoute = path.startsWith('/admin');
+  const adminCheckPending = isAdminRoute && !adminStatus.checked;
+
+  if (adminCheckPending || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <p className="text-slate-500">Загрузка меню…</p>
       </div>
+    );
+  }
+
+  if (isAdminRoute && !adminStatus.isAdmin) {
+    return (
+      <AdminLoginPage
+        hasSession={adminStatus.hasSession}
+        error={adminStatus.error}
+        onLoginSuccess={() => setAdminRefreshKey((prev) => prev + 1)}
+      />
     );
   }
 
