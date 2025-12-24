@@ -28,6 +28,14 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               <p className="text-sm text-slate-500">
                 {new Date(order.created_at).toLocaleString('ru-RU')}
               </p>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+                <span className="rounded-full bg-slate-100 px-3 py-1">
+                  Статус: {order.status}
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1">
+                  Источник: {order.source}
+                </span>
+              </div>
             </div>
             <div className="text-lg font-semibold text-slate-900">
               {order.total_price.toLocaleString('ru-RU')} ₽
