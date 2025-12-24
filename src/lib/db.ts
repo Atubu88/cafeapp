@@ -101,6 +101,32 @@ export async function checkAdminAccess(): Promise<{
   };
 }
 
+export async function signInAdmin(
+  email: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function signOutAdmin(): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
 export async function fetchMenu(): Promise<{
   categories: Category[];
   products: Product[];
